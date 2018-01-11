@@ -1,7 +1,7 @@
 (function() {
   "use strict";
   kintone.events.on('app.record.index.show', function(event){
-    if (event.viewId !== 5299966){
+    if (event.viewName !== '出力用一覧（当月&出力済除外）'){
       return;
     }
 
