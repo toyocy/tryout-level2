@@ -5,36 +5,66 @@
       return;
     }
 
+    if (document.getElementById('export-csv') !== null) {
+      return;
+    }
+
     var exportButton = document.createElement('button');
     exportButton.id = 'export-csv';
     exportButton.innerHTML = 'CSV出力'
 
-    var csv = [];
-    for (var i = 0; i < events.records.length; i++){
-      var record = events.records[i];
-      var value = [];
-      if (record.is_checked_by_tax_accountant.value != "済") { continue; }
-      value.push(record.export_to_csv.value);
-      value.push(record.is_checked_by_tax_accountant.value);
-      value.push(record.tax.value);
-      value.push(record.payer_name.value);
-      value.push(record.expense.value);
-      value.push(record.content.value);
-      value.push(record.amount_of_money.value);
-      value.push(record.recipt.value);
-      value.push(record['作成日時'].value);
-      csv.push(value);
+    var escapeString = function(value) {
+      return '"' + (value? value.replace(/"/g, '""'): '') + '"';
+    };
+        
+    if ((window.URL || window.webkitURL).createObjectURL == null) {
+      // サポートされていないブラウザ
+      return;
     }
+  
+    var csv = [];
+    var row = [];
+    for (var i = 0; i < event.records.length; i++){
+      var record = event.records[i];
+      row = [];
+      if (record.is_checked_by_tax_accountant.value != "済") { continue; }
+      row.push(record.export_to_csv.value);
+      row.push(record.is_checked_by_tax_accountant.value);
+      row.push(record.tax.value);
+      row.push(record.payer_name.value);
+      row.push(record.expense.value);
+      row.push(record.content.value);
+      row.push(record.amount_of_money.value);
+      row.push(record.recipt.value);
+      row.push(record['作成日時'].value);
+      csv.push(row);
+    }
+
+    var csvbuf = csv.map(function(e){return e.join(',')}).join('\r\n');
+    var bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    var blob = new Blob([bom, csvbuf], { type: 'text/csv' });
+    var url = (window.URL || window.webkitURL).createObjectURL(blob);
+    var fileName = "export.csv"
 
     exportButton.onclick = function() {
       var confirmResponse = confirm('CSVを出力します');
       if (confirmResponse) {
-        //download csv file
+        if (window.navigator.msSaveOrOpenBlob) {
+          // for IE
+          window.navigator.msSaveOrOpenBlob(blob, fileName);
+        } else {
+          //for not IE
+          var link = document.createElement('a');
+          var e = document.createEvent('MouseEvents');
+          e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+          link.download = fileName;
+          link.href = url;
+          link.dispatchEvent(e);
+        }
       }else{
         return;
       }
     };
-
     kintone.app.getHeaderMenuSpaceElement().appendChild(exportButton);
   });
 })();
