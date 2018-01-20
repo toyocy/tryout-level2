@@ -40,9 +40,19 @@
       csv.push(row);
     }
 
+    var stringToArray = function(string) {
+      var array = [],i,il=string.length;
+      for (i=0; i<il; i++) array.push(string.charCodeAt(i));
+      return array;
+    };
+
     var csvbuf = csv.map(function(e){return e.join(',')}).join('\r\n');
-    var bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    var blob = new Blob([bom, csvbuf], { type: 'text/csv' });
+
+    var array = stringToArray(csvbuf);
+    var sjisArray = Encoding.convert(array, "SJIS", "UNICODE");
+    var uint8Array = new Uint8Array(sjisArray);
+    var blob = new Blob([uint8Array], { type: 'text/csv' });
+    
     var url = (window.URL || window.webkitURL).createObjectURL(blob);
     var fileName = "export.csv"
 
