@@ -1,13 +1,13 @@
 (function() {
   "use strict";
-  kintone.events.on('app.record.index.show', function(events){
-    if (events.viewName !== '出力用一覧（当月&出力済除外）'){
+  kintone.events.on('app.record.index.show', function(event){
+    if (event.viewName !== '出力用一覧（当月&出力済除外）'){
       return;
     }
 
-    var myIndexButton = document.createElement('button');
-    myIndexButton.id = 'my_index_buton';
-    myIndexButton.innerHTML = 'CSV出力'
+    var exportButton = document.createElement('button');
+    exportButton.id = 'export-csv';
+    exportButton.innerHTML = 'CSV出力'
 
     var csv = [];
     for (var i = 0; i < events.records.length; i++){
@@ -26,14 +26,15 @@
       csv.push(value);
     }
 
-    myIndexButton.onclick = function() {
+    exportButton.onclick = function() {
       var confirmResponse = confirm('CSVを出力します');
       if (confirmResponse) {
-        console.log(csv);
+        //download csv file
+      }else{
+        return;
       }
-      return;
     };
 
-    kintone.app.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+    kintone.app.getHeaderMenuSpaceElement().appendChild(exportButton);
   });
 })();
