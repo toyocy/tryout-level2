@@ -1,20 +1,50 @@
 (function() {
 
-  "use strict";
+    "use strict";
 
     if ((window.URL || window.webkitURL).createObjectURL == null) {
       // non supported browser
-      return;
+        return;
     }
-  
-    function downloadCSV(expenseCsvData) {
-      var stringToArray = function(csv) {
-        var array = [],i,il = csv.length;
-        for (i=0; i<il; i++) array.push(csv.charCodeAt(i));
+
+    function updateExpenseRecord(appId, records) {
+      kintone.api(
+        kintone.api.url('/k/v1/records', true),
+        'PUT', {
+          app: appId,
+          records: records
+        },
+        function(resp) {
+          console.log(resp);
+        }, function(error) {
+          console.log(error);
+        });
+    }
+
+    function createPutRecords(records) {
+      var putRecords = [];
+      for (var m = 0; m < records.length; m++) {
+        var record = records[m];
+        putRecords[m] = {
+          id:record['$id'].value,
+          record:{
+            export_to_csv:{
+              value:["済"]
+            }
+          }
+        };
+      }
+      return putRecords;
+    }
+
+    function downloadCSV(expenseData) {
+      var stringToArray = function(data) {
+        var array = [],i,il = data.length;
+        for (i=0; i<il; i++) array.push(data.charCodeAt(i));
         return array;
       };
   
-      var csvbuf = expenseCsvData.map(function(e){return e.join(',')}).join('\r\n');
+      var csvbuf = expenseData.map(function(e){return e.join(',')}).join('\r\n');
       var array = stringToArray(csvbuf);
       var sjisArray = Encoding.convert(array, "SJIS", "UNICODE");
       var uint8Array = new Uint8Array(sjisArray);
@@ -37,19 +67,17 @@
           link.href = url;
           link.dispatchEvent(e);
         }
-
-        // ここにCSV出力のチェックを入れる
-
-      }else{
+      } else {
         return;
       }
     }
 
     function fetchRecords(appId, offset, limit, records) {
       var offset = offset || 0;
-      var limit = limit || 100;
+      var limit = limit || 500;
       var allRecords = records || [];
-      var params = { app: appId, query: 'order by レコード番号 asc limit ' + limit + ' offset ' + offset };
+      var query = 'payed_at != THIS_MONTH() and export_to_csv not in ("済") order by payed_at asc'
+      var params = { app: appId, query: query + ' limit ' + limit + ' offset ' + offset };
       return kintone.api('/k/v1/records', 'GET', params).then(function(res) {
         allRecords = allRecords.concat(res.records);
         if (res.records.length === limit ) {
@@ -60,12 +88,11 @@
     }
 
     function createCsvFile(records) {
-      var expenseCsvData = [];
+      var expenseData = [];
       var row = [];
-      for (var j = 0; j < records.length; j++){
+      for (var j = 0; j < records.length; j++) {
         var record = records[j];
         row = [];
-        if (record.is_checked_by_tax_accountant.value != "済") { continue; }
         row.push(record.export_to_csv.value);
         row.push(record.is_checked_by_tax_accountant.value);
         row.push(record.tax.value);
@@ -75,11 +102,11 @@
         row.push(record.amount_of_money.value);
         row.push(record.recipt.value);
         row.push(record['作成日時'].value);
-        expenseCsvData.push(row);
+        expenseData.push(row);
       }
-      downloadCSV(expenseCsvData);
+      downloadCSV(expenseData);
     }
-    
+
     kintone.events.on('app.record.index.show', function(event){
       if (event.viewName !== '出力用一覧（当月&出力済除外）'){
         return;
@@ -95,8 +122,11 @@
       exportButton.innerHTML = 'CSV出力';
 
       exportButton.onclick = function() {
-        fetchRecords(kintone.app.getId()).then(function(records) {
+        var appId = kintone.app.getId();
+        fetchRecords(appId).then(function(records) {
           createCsvFile(records);
+          var updateRecords = createPutRecords(records);
+          updateExpenseRecord(appId, updateRecords);
         });
       };
 
