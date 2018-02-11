@@ -126,8 +126,8 @@
         var appId = kintone.app.getId();
         fetchRecords(appId).then(function(records) {
           createCsvFile(records);
-          // var updateRecords = createPutRecords(records);
-          // updateExpenseRecord(appId, updateRecords);
+          var updateRecords = createPutRecords(records);
+          updateExpenseRecord(appId, updateRecords);
         });
       };
 
