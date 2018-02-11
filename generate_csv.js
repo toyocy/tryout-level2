@@ -90,8 +90,8 @@
     function createCsvFile(records) {
       var expenseData = [];
       var row = [];
-      for (var j = 0; j < records.length; j++) {
-        var record = records[j];
+
+      records.forEach(record => {
         row = [];
         row.push(record.export_to_csv.value);
         row.push(record.is_checked_by_tax_accountant.value);
@@ -103,7 +103,8 @@
         row.push(record.recipt.value);
         row.push(record['作成日時'].value);
         expenseData.push(row);
-      }
+      });
+
       downloadCSV(expenseData);
     }
 
@@ -125,8 +126,8 @@
         var appId = kintone.app.getId();
         fetchRecords(appId).then(function(records) {
           createCsvFile(records);
-          var updateRecords = createPutRecords(records);
-          updateExpenseRecord(appId, updateRecords);
+          // var updateRecords = createPutRecords(records);
+          // updateExpenseRecord(appId, updateRecords);
         });
       };
 
