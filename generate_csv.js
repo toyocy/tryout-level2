@@ -18,7 +18,7 @@
           console.log(resp);
         }, function(error) {
           console.log(error);
-        });
+      });
     }
 
     function createPutRecords(records) {
@@ -88,23 +88,52 @@
     }
 
     function createCsvFile(records) {
-      var expenseData = [];
       var row = [];
+      var expenseData = [];
 
       records.forEach(record => {
         row = [];
-        row.push(record.export_to_csv.value);
-        row.push(record.is_checked_by_tax_accountant.value);
-        row.push(record.tax.value);
-        row.push(record.payer_name.value);
-        row.push(record.expense.value);
-        row.push(record.content.value);
+        // row.push("1");
+        // row.push("");
+        // row.push(record.is_checked_by_tax_accountant.value);
+        // row.push(record.tax.value);
+        // row.push(record.payer_name.value);
+        // row.push(record.expense.value);
+        // row.push(record.content.value);
+        // row.push(record.amount_of_money.value);
+        // row.push(record.recipt.value);
+        // row.push(record['作成日時'].value);
+        row.push("1");
+        row.push("");
+        row.push(record.payed_at.value);
+        row.push("");
+        row.push("");
+        row.push("accountCode=費目に格納されている");
+        row.push("");
+        row.push("");
+        row.push("");
+        row.push("");
+        row.push("税種別：原価は50、原価以外なら60");
+        row.push("1");
+        row.push("tax");
+        row.push("1");
         row.push(record.amount_of_money.value);
-        row.push(record.recipt.value);
-        row.push(record['作成日時'].value);
+        row.push("");
+        row.push("支払先：費用名"); // Kintone に支払先がないので、「内容」に置き換える？
+        row.push("1118 or 2114"); // 費用が小口現金の場合、1118
+        row.push("user id");
+        row.push("");
+        row.push("");
+        row.push("");
+        row.push("税種別：原価は50、原価以外なら60");
+        row.push("1");
+        row.push("tax");
+        row.push("1");
+        row.push(record.amount_of_money.value);
+        row.push("");
+        row.push("支払先：費用名"); // Kintone に支払先がないので、「内容」に置き換える？
         expenseData.push(row);
       });
-
       downloadCSV(expenseData);
     }
 
