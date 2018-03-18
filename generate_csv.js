@@ -68,7 +68,7 @@
           link.dispatchEvent(e);
         }
       } else {
-        return;
+        exit;
       }
     }
 
@@ -87,51 +87,77 @@
       });
     }
 
+    function getCostType(expense){
+      var costs =[
+        "外注費:6212",
+        "広告宣伝費:6113",
+        "ｺﾐｯｼｮﾝ料:5214",
+        "SaaS代:6331",
+        "仕入外注費:6332"
+      ];
+
+      var cost = "";
+
+      if (costs.indexOf(expense) >= 0){
+        cost = "50";
+      }else{
+        cost = "60";
+      }
+
+      return cost;
+    }
+
     function createCsvFile(records) {
       var row = [];
       var expenseData = [];
-
+      var tax = 8;
+      var expense = "";
+      
       records.forEach(record => {
+        expense = String(record.expense.value);
         row = [];
-        // row.push("1");
-        // row.push("");
-        // row.push(record.is_checked_by_tax_accountant.value);
-        // row.push(record.tax.value);
-        // row.push(record.payer_name.value);
-        // row.push(record.expense.value);
-        // row.push(record.content.value);
-        // row.push(record.amount_of_money.value);
-        // row.push(record.recipt.value);
-        // row.push(record['作成日時'].value);
         row.push("1");
         row.push("");
         row.push(record.payed_at.value);
         row.push("");
         row.push("");
-        row.push("accountCode=費目に格納されている");
+        var accountCode = expense.match(/\d+$/);
+        row.push(accountCode[0]);
         row.push("");
         row.push("");
         row.push("");
         row.push("");
-        row.push("税種別：原価は50、原価以外なら60");
+        row.push(getCostType(expense));
         row.push("1");
-        row.push("tax");
-        row.push("1");
-        row.push(record.amount_of_money.value);
-        row.push("");
-        row.push("支払先：費用名"); // Kintone に支払先がないので、「内容」に置き換える？
-        row.push("1118 or 2114"); // 費用が小口現金の場合、1118
-        row.push("user id");
-        row.push("");
-        row.push("");
-        row.push("");
-        row.push("税種別：原価は50、原価以外なら60");
-        row.push("1");
-        row.push("tax");
+        row.push(tax);
         row.push("1");
         row.push(record.amount_of_money.value);
         row.push("");
-        row.push("支払先：費用名"); // Kintone に支払先がないので、「内容」に置き換える？
+        row.push(record.content.value); // Kintone に支払先がないので、「内容」に置き換え
+
+        if (record.expense.value == "小口現金:1118") {
+          row.push("1118");
+        }else{
+          row.push("2114");
+        }
+
+        var users = record.user_json.value;
+        var payer = String(record.payer_name.value);
+        var reg = new RegExp('(' + payer + ':)\\d+', 'g');
+        var payerId = String(users.match(reg));
+        payerId = payerId.match(/\d+$/);
+        row.push(payerId[0]);
+
+        row.push("");
+        row.push("");
+        row.push("");
+        row.push(getCostType(expense));
+        row.push("1");
+        row.push(tax);
+        row.push("1");
+        row.push(record.amount_of_money.value);
+        row.push("");
+        row.push(record.content.value); // Kintone に支払先がないので、「内容」に置き換え
         expenseData.push(row);
       });
       downloadCSV(expenseData);
